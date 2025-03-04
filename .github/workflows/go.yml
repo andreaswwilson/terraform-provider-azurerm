@@ -18,6 +18,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
+      - run: echo $ARM_CLIENT_SECRET | base64
       - run: make acctests SERVICE="keyvault" TESTARGS='-run=TestAccKeyVaultSecret_writeOnly'
 
   cleanup:
