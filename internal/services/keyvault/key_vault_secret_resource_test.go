@@ -10,9 +10,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
+	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/provider/framework"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/parse"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
@@ -43,25 +47,31 @@ func TestAccKeyVaultSecret_writeOnlyValue(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_key_vault_secret", "test")
 	r := KeyVaultSecretResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.writeOnly(data, "rick-and-morty", 1),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("value").IsEmpty(),
-				check.That(data.ResourceName).Key("value_wo_version").HasValue("1"),
-			),
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
 		},
-		data.ImportStep("value", "value_wo_version"),
-		{
-			Config: r.writeOnly(data, "szechuan", 2),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("value").IsEmpty(),
-				check.That(data.ResourceName).Key("value_wo_version").HasValue("2"),
-			),
+		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
+		Steps: []acceptance.TestStep{
+			{
+				Config: r.writeOnly(data, "rick-and-morty", 1),
+				Check: acceptance.ComposeTestCheckFunc(
+					check.That(data.ResourceName).ExistsInAzure(r),
+					check.That(data.ResourceName).Key("value").IsEmpty(),
+					check.That(data.ResourceName).Key("value_wo_version").HasValue("1"),
+				),
+			},
+			data.ImportStep("value", "value_wo_version"),
+			{
+				Config: r.writeOnly(data, "szechuan", 2),
+				Check: acceptance.ComposeTestCheckFunc(
+					check.That(data.ResourceName).ExistsInAzure(r),
+					check.That(data.ResourceName).Key("value").IsEmpty(),
+					check.That(data.ResourceName).Key("value_wo_version").HasValue("2"),
+				),
+			},
+			data.ImportStep("value", "value_wo_version"),
 		},
-		data.ImportStep("value", "value_wo_version"),
 	})
 }
 
@@ -70,24 +80,30 @@ func TestAccKeyVaultSecret_writeOnlyValueUpdateRename(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_key_vault_secret", "test")
 	r := KeyVaultSecretResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.basic(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("value").HasValue("rick-and-morty"),
-			),
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
 		},
-		data.ImportStep(),
-		{
-			Config: r.writeOnly(data, "szechuan", 1),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("value").IsEmpty(),
-				check.That(data.ResourceName).Key("value_wo_version").HasValue("1"),
-			),
+		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
+		Steps: []acceptance.TestStep{
+			{
+				Config: r.basic(data),
+				Check: acceptance.ComposeTestCheckFunc(
+					check.That(data.ResourceName).ExistsInAzure(r),
+					check.That(data.ResourceName).Key("value").HasValue("rick-and-morty"),
+				),
+			},
+			data.ImportStep(),
+			{
+				Config: r.writeOnly(data, "szechuan", 1),
+				Check: acceptance.ComposeTestCheckFunc(
+					check.That(data.ResourceName).ExistsInAzure(r),
+					check.That(data.ResourceName).Key("value").IsEmpty(),
+					check.That(data.ResourceName).Key("value_wo_version").HasValue("1"),
+				),
+			},
+			data.ImportStep("value", "value_wo_version"),
 		},
-		data.ImportStep("value", "value_wo_version"),
 	})
 }
 
