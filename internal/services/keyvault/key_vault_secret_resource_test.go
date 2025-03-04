@@ -39,7 +39,7 @@ func TestAccKeyVaultSecret_basic(t *testing.T) {
 	})
 }
 
-func TestAccKeyVaultSecret_writeOnly(t *testing.T) {
+func TestAccKeyVaultSecret_writeOnlyValue(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_key_vault_secret", "test")
 	r := KeyVaultSecretResource{}
 
@@ -50,6 +50,15 @@ func TestAccKeyVaultSecret_writeOnly(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("value").IsEmpty(),
 				check.That(data.ResourceName).Key("value_wo_version").HasValue("1"),
+			),
+		},
+		data.ImportStep("value", "value_wo_version"),
+		{
+			Config: r.writeOnly(data, "szechuan", 2),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("value").IsEmpty(),
+				check.That(data.ResourceName).Key("value_wo_version").HasValue("2"),
 			),
 		},
 		data.ImportStep("value", "value_wo_version"),
