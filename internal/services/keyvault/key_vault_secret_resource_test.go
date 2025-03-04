@@ -39,6 +39,23 @@ func TestAccKeyVaultSecret_basic(t *testing.T) {
 	})
 }
 
+func TestAccKeyVaultSecret_writeOnly(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_key_vault_secret", "test")
+	r := KeyVaultSecretResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.writeOnly(data, "rick-and-morty", 1),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("value").IsEmpty(),
+				check.That(data.ResourceName).Key("value_wo_version").HasValue("1"),
+			),
+		},
+		data.ImportStep("value", "value_wo_version"),
+	})
+}
+
 func TestAccKeyVaultSecret_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_key_vault_secret", "test")
 	r := KeyVaultSecretResource{}
@@ -326,6 +343,23 @@ resource "azurerm_key_vault_secret" "test" {
   key_vault_id = azurerm_key_vault.test.id
 }
 `, r.template(data), data.RandomString)
+}
+
+func (r KeyVaultSecretResource) writeOnly(data acceptance.TestData, secret string, version int) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+%s
+
+resource "azurerm_key_vault_secret" "test" {
+  name              = "secret-%s"
+  value_wo          = "%s"
+  value_wo_version  = %d
+  key_vault_id      = azurerm_key_vault.test.id
+}
+`, r.template(data), data.RandomString, secret, version)
 }
 
 func (r KeyVaultSecretResource) updateTags(data acceptance.TestData) string {
