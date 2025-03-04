@@ -103,6 +103,14 @@ func TestAccKeyVaultSecret_writeOnlyValueUpdateRename(t *testing.T) {
 				),
 			},
 			data.ImportStep("value", "value_wo_version"),
+			{
+				Config: r.basic(data),
+				Check: acceptance.ComposeTestCheckFunc(
+					check.That(data.ResourceName).ExistsInAzure(r),
+					check.That(data.ResourceName).Key("value").HasValue("rick-and-morty"),
+				),
+			},
+			data.ImportStep(),
 		},
 	})
 }
