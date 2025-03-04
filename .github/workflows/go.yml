@@ -2,7 +2,7 @@ name : Go
 
 env:
   ARM_CLIENT_ID: "${{ vars.ARM_CLIENT_ID }}"
-  ARM_CLIENT_SECRET: "{{ secrets.ARM_CLIENT_SECRET }}"
+  ARM_CLIENT_SECRET: "${{ secrets.ARM_CLIENT_SECRET }}"
   ARM_SUBSCRIPTION_ID: "${{ vars.ARM_SUBSCRIPTION_ID }}"
   ARM_TENANT_ID: "${{ vars.ARM_TENANT_ID }}"
   ARM_TEST_LOCATION: "${{ vars.ARM_TEST_LOCATION }}"
@@ -18,14 +18,4 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - run: echo $ARM_CLIENT_SECRET | base64
       - run: make acctests SERVICE="keyvault" TESTARGS='-run=TestAccKeyVaultSecret_writeOnly'
-
-  cleanup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: '{"clientId":"${{ vars.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ vars.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ vars.ARM_TENANT_ID }}"}'
-      - run: az group list --query "[?starts_with(name, 'acctest')].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
