@@ -54,7 +54,7 @@ func TestAccKeyVaultSecret_writeOnlyValue(t *testing.T) {
 		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
 		Steps: []acceptance.TestStep{
 			{
-				Config: r.writeOnly(data, "rick-and-morty", 1),
+				Config: r.writeOnlyValue(data, "rick-and-morty", 1),
 				Check: acceptance.ComposeTestCheckFunc(
 					check.That(data.ResourceName).ExistsInAzure(r),
 					check.That(data.ResourceName).Key("value").IsEmpty(),
@@ -63,7 +63,7 @@ func TestAccKeyVaultSecret_writeOnlyValue(t *testing.T) {
 			},
 			data.ImportStep("value", "value_wo_version"),
 			{
-				Config: r.writeOnly(data, "szechuan", 2),
+				Config: r.writeOnlyValue(data, "szechuan", 2),
 				Check: acceptance.ComposeTestCheckFunc(
 					check.That(data.ResourceName).ExistsInAzure(r),
 					check.That(data.ResourceName).Key("value").IsEmpty(),
@@ -75,8 +75,7 @@ func TestAccKeyVaultSecret_writeOnlyValue(t *testing.T) {
 	})
 }
 
-// TODO: rename to updateToWriteOnlyValue
-func TestAccKeyVaultSecret_writeOnlyValueUpdateRename(t *testing.T) {
+func TestAccKeyVaultSecret_updateToWriteOnlyValue(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_key_vault_secret", "test")
 	r := KeyVaultSecretResource{}
 
@@ -95,7 +94,7 @@ func TestAccKeyVaultSecret_writeOnlyValueUpdateRename(t *testing.T) {
 			},
 			data.ImportStep(),
 			{
-				Config: r.writeOnly(data, "szechuan", 1),
+				Config: r.writeOnlyValue(data, "szechuan", 1),
 				Check: acceptance.ComposeTestCheckFunc(
 					check.That(data.ResourceName).ExistsInAzure(r),
 					check.That(data.ResourceName).Key("value").IsEmpty(),
@@ -404,7 +403,7 @@ resource "azurerm_key_vault_secret" "test" {
 `, r.template(data), data.RandomString)
 }
 
-func (r KeyVaultSecretResource) writeOnly(data acceptance.TestData, secret string, version int) string {
+func (r KeyVaultSecretResource) writeOnlyValue(data acceptance.TestData, secret string, version int) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
