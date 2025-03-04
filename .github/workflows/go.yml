@@ -1,7 +1,15 @@
 name : Go
 
-on: [push]
+env:
+  ARM_CLIENT_ID: "${{ vars.AZURE_CLIENT_ID }}"
+  ARM_CLIENT_SECRET: "{{ secret.ARM_CLIENT_SECRET }}"
+  ARM_SUBSCRIPTION_ID: "${{ vars.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ vars.AZURE_TENANT_ID }}"
+  ARM_TEST_LOCATION: "${{ vars.ARM_TEST_LOCATION }}"
+  ARM_TEST_LOCATION_ALT2: "${{ vars.ARM_TEST_LOCATION_ALT2 }}"
+  ARM_TEST_LOCATION_ALT: "${{ vars.ARM_TEST_LOCATION_ALT }}"
 
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
